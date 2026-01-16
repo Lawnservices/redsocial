@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>perfil</title>
+</head>
+<body>
+    <h2>Mi perfil</h2>
+<input id="bio" placeholder="Bio">
+<button id="guardar">Guardar</button>
+
+<script type="module">
+import { auth, db } from './app.js';
+import { updateDoc, doc } from "firebase/firestore";
+
+guardar.onclick = async () => {
+  await updateDoc(doc(db, "users", auth.currentUser.uid), {
+    bio: bio.value
+  });
+};
+</script>
+
+</body>
+</html>
