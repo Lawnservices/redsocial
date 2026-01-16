@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>usuarios</title>
+</head>
+<body>
+    <h2>Usuarios</h2>
+<div id="lista"></div>
+
+<script type="module">
+import { db } from './app.js';
+import { collection, getDocs } from "firebase/firestore";
+
+const snap = await getDocs(collection(db, "users"));
+snap.forEach(docu => {
+  lista.innerHTML += `
+    <a href="user.html?uid=${docu.id}">
+      ${docu.data().nombre}
+    </a><br>
+  `;
+});
+</script>
+
+    
+</body>
+</html>
