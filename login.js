@@ -42,6 +42,7 @@ verificarBtn.addEventListener('click', () => {
       });
 
       alert("Usuario autenticado y guardado en Firestore!");
+      window.location.href = 'perfil.html';
     })
     .catch(error => {
       console.error(error);
