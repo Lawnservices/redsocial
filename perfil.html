@@ -14,6 +14,16 @@
 <p>Nombre: <span id="perfil-nombre"></span></p>
 <p>Teléfono: <span id="perfil-telefono"></span></p>
 
+
+  <h1>Perfil de Usuario</h1>
+
+  <p>Nombre: <span id="perfil-nombre"></span></p>
+  <p>Teléfono: <span id="perfil-telefono"></span></p>
+
+  <h2>Otros usuarios</h2>
+  <ul id="lista-usuarios"></ul>
+
+  <button id="cerrar-sesion">Cerrar sesión</button>
 <script type="module">
 import { auth, db } from './app.js';
 import { updateDoc, doc } from "firebase/firestore";
