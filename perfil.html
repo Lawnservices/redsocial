@@ -58,133 +58,49 @@ button:hover{background:#145dbf}
 
 </div>
 
-<script type="module">
-import { auth, db, storage } from './app.js';
-import {
-  doc, getDoc, updateDoc,
-  collection, addDoc, getDocs, query, orderBy
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+ 
+ <script type="module">
+document.addEventListener("DOMContentLoaded", () => {
 
-const fotoPerfil = document.getElementById("fotoPerfil");
-const fotoInput = document.getElementById("fotoInput");
-const bio = document.getElementById("bio");
-const guardarPerfil = document.getElementById("guardarPerfil");
-const logout = document.getElementById("logout");
+  // ⬇️ Aquí empieza tu código original
+  import { auth, db, storage } from './app.js';
+  import {
+    doc, getDoc, updateDoc,
+    collection, addDoc, getDocs, query, orderBy
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
-const textoPost = document.getElementById("textoPost");
-const imagenPost = document.getElementById("imagenPost");
-const publicar = document.getElementById("publicar");
-const preview = document.getElementById("preview");
+  const fotoPerfil = document.getElementById("fotoPerfil");
+  const fotoInput = document.getElementById("fotoInput");
+  const bio = document.getElementById("bio");
+  const guardarPerfil = document.getElementById("guardarPerfil");
+  const logout = document.getElementById("logout");
 
-const postsDiv = document.getElementById("posts");
-const usuariosDiv = document.getElementById("usuarios");
+  const textoPost = document.getElementById("textoPost");
+  const imagenPost = document.getElementById("imagenPost");
+  const publicar = document.getElementById("publicar");
+  const preview = document.getElementById("preview");
 
-// 🔹 VARIABLES FALTANTES (CORREGIDO)
-const nombre = document.getElementById("nombre");
-const telefono = document.getElementById("telefono");
+  const postsDiv = document.getElementById("posts");
+  const usuariosDiv = document.getElementById("usuarios");
 
-// 🔹 PREVIEW REAL DE IMAGEN
-imagenPost.onchange = () => {
-  const file = imagenPost.files[0];
-  if (!file) return;
-  preview.src = URL.createObjectURL(file);
-  preview.style.display = "block";
-};
+  const nombre = document.getElementById("nombre");
+  const telefono = document.getElementById("telefono");
 
-// 🔹 AUTH
-auth.onAuthStateChanged(async user=>{
-if(!user){location.href="index.html";return;}
+  // PREVIEW DE IMAGEN
+  imagenPost.onchange = () => {
+    const file = imagenPost.files[0];
+    if (!file) return;
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+  };
 
-const snap = await getDoc(doc(db,"users",user.uid));
-if(snap.exists()){
- const d = snap.data();
- nombre.innerText = d.nombre;
- telefono.innerText = d.telefono;
- bio.value = d.bio || "";
- if(d.foto) fotoPerfil.src = d.foto;
-}
+  // ... ⬆️ y todo el resto de tu código igual
 
-cargarUsuarios();
-cargarPosts();
-});
-
-// 🔹 FOTO PERFIL
-fotoInput.onchange = async e=>{
-const file=e.target.files[0];
-if(!file)return;
-const r=ref(storage,`perfiles/${auth.currentUser.uid}`);
-await uploadBytes(r,file);
-const url=await getDownloadURL(r);
-await updateDoc(doc(db,"users",auth.currentUser.uid),{foto:url});
-fotoPerfil.src=url;
-};
-
-// 🔹 GUARDAR PERFIL
-guardarPerfil.onclick=async()=>{
-await updateDoc(doc(db,"users",auth.currentUser.uid),{bio:bio.value});
-alert("Perfil guardado");
-};
-
-// 🔹 PUBLICAR POST
-publicar.onclick = async () => {
-  let imgURL = "";
-
-  if (imagenPost.files[0]) {
-    const r = ref(storage, `posts/${Date.now()}_${auth.currentUser.uid}`);
-    await uploadBytes(r, imagenPost.files[0]);
-    imgURL = await getDownloadURL(r);
-  }
-
-  await addDoc(collection(db, "posts"), {
-    uid: auth.currentUser.uid,
-    nombre: nombre.innerText,
-    texto: textoPost.value,
-    imagen: imgURL,
-    fecha: Date.now()
-  });
-
-  textoPost.value = "";
-  imagenPost.value = "";
-  preview.style.display = "none";
-
-  cargarPosts();
-};
-
-// 🔹 CARGAR POSTS
-async function cargarPosts(){
-postsDiv.innerHTML="";
-const q=query(collection(db,"posts"),orderBy("fecha","desc"));
-const snap=await getDocs(q);
-snap.forEach(p=>{
- const d=p.data();
- postsDiv.innerHTML+=`
- <div class="post">
-  <b>${d.nombre}</b><br>
-  ${d.texto||""}
-  ${d.imagen?`<img src="${d.imagen}">`:""}
- </div>`;
-});
-}
-
-// 🔹 USUARIOS
-async function cargarUsuarios(){
-const snap=await getDocs(collection(db,"users"));
-usuariosDiv.innerHTML="";
-snap.forEach(u=>{
- if(u.id!==auth.currentUser.uid){
-  usuariosDiv.innerHTML+=`<div class="user"><b>${u.data().nombre}</b><br>${u.data().bio||""}</div>`;
- }
-});
-}
-
-// 🔹 LOGOUT
-logout.onclick=async()=>{
-await signOut(auth);
-location.href="index.html";
-};
+}); // ⬅️ CIERRE DEL DOMContentLoaded
 </script>
+
 
 </body>
 </html>
