@@ -17,6 +17,7 @@ button:hover{background:#145dbf}
 .post{border-bottom:1px solid #ddd;padding:10px 0}
 .post img{max-width:100%;border-radius:10px;margin-top:8px}
 .user{padding:8px 0;border-bottom:1px solid #ddd}
+.preview{max-width:100%;border-radius:10px;margin-top:8px}
 @media(max-width:768px){.container{grid-template-columns:1fr}}
 </style>
 </head>
@@ -45,6 +46,7 @@ button:hover{background:#145dbf}
   <h3>Crear publicación</h3>
   <textarea id="textoPost" placeholder="¿Qué estás pensando?"></textarea>
   <input type="file" id="imagenPost">
+  <img id="preview" class="preview" style="display:none">
   <button id="publicar">Publicar</button>
 
   <h3>Publicaciones</h3>
@@ -59,7 +61,7 @@ button:hover{background:#145dbf}
 <script type="module">
 import { auth, db, storage } from './app.js';
 import {
-  doc, getDoc, setDoc, updateDoc,
+  doc, getDoc, updateDoc,
   collection, addDoc, getDocs, query, orderBy
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
@@ -74,83 +76,85 @@ const logout = document.getElementById("logout");
 const textoPost = document.getElementById("textoPost");
 const imagenPost = document.getElementById("imagenPost");
 const publicar = document.getElementById("publicar");
+const preview = document.getElementById("preview");
 
 const postsDiv = document.getElementById("posts");
 const usuariosDiv = document.getElementById("usuarios");
 
+// 🔹 PREVIEW REAL DE IMAGEN
+imagenPost.onchange = () => {
+  const file = imagenPost.files[0];
+  if (!file) return;
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = "block";
+};
+
+// 🔹 AUTH
 auth.onAuthStateChanged(async user=>{
 if(!user){location.href="index.html";return;}
 
-const userRef = doc(db,"users",user.uid);
-const snap = await getDoc(userRef);
-
+const snap = await getDoc(doc(db,"users",user.uid));
 if(snap.exists()){
-  const d = snap.data();
-  nombre.innerText = d.nombre;
-  telefono.innerText = d.telefono;
-  bio.value = d.bio || "";
-  if(d.foto) fotoPerfil.src = d.foto;
+ const d = snap.data();
+ nombre.innerText=d.nombre;
+ telefono.innerText=d.telefono;
+ bio.value=d.bio||"";
+ if(d.foto) fotoPerfil.src=d.foto;
 }
 
-// OTROS USUARIOS
-const usersSnap = await getDocs(collection(db,"users"));
-usuariosDiv.innerHTML="";
-usersSnap.forEach(u=>{
- if(u.id!==user.uid){
-  usuariosDiv.innerHTML+=`<div class="user"><b>${u.data().nombre}</b><br>${u.data().bio||""}</div>`;
- }
-});
-
-// POSTS
+cargarUsuarios();
 cargarPosts();
 });
 
-// FOTO PERFIL
+// 🔹 FOTO PERFIL
 fotoInput.onchange = async e=>{
-const file = e.target.files[0];
-if(!file) return;
-const refImg = ref(storage,`perfiles/${auth.currentUser.uid}`);
-await uploadBytes(refImg,file);
-const url = await getDownloadURL(refImg);
+const file=e.target.files[0];
+if(!file)return;
+const r=ref(storage,`perfiles/${auth.currentUser.uid}`);
+await uploadBytes(r,file);
+const url=await getDownloadURL(r);
 await updateDoc(doc(db,"users",auth.currentUser.uid),{foto:url});
-fotoPerfil.src = url;
+fotoPerfil.src=url;
 };
 
-// GUARDAR PERFIL
-guardarPerfil.onclick = async ()=>{
+// 🔹 GUARDAR PERFIL
+guardarPerfil.onclick=async()=>{
 await updateDoc(doc(db,"users",auth.currentUser.uid),{bio:bio.value});
 alert("Perfil guardado");
 };
 
-// PUBLICAR
-publicar.onclick = async ()=>{
-let imgUrl="";
-if(imagenPost.files[0]){
- const r = ref(storage,`posts/${Date.now()}_${auth.currentUser.uid}`);
- await uploadBytes(r,imagenPost.files[0]);
- imgUrl = await getDownloadURL(r);
-}
+// 🔹 PUBLICAR POST (ARREGLADO)
+publicar.onclick = async () => {
+  let imgURL = "";
 
-await addDoc(collection(db,"posts"),{
- uid:auth.currentUser.uid,
- nombre:nombre.innerText,
- texto:textoPost.value,
- imagen:imgUrl,
- fecha:Date.now()
-});
+  if (imagenPost.files[0]) {
+    const r = ref(storage, `posts/${Date.now()}_${auth.currentUser.uid}`);
+    await uploadBytes(r, imagenPost.files[0]);
+    imgURL = await getDownloadURL(r);
+  }
 
-textoPost.value="";
-imagenPost.value="";
-cargarPosts();
+  await addDoc(collection(db, "posts"), {
+    uid: auth.currentUser.uid,
+    nombre: nombre.innerText,
+    texto: textoPost.value,
+    imagen: imgURL,
+    fecha: Date.now()
+  });
+
+  textoPost.value = "";
+  imagenPost.value = "";
+  preview.style.display = "none";
+
+  cargarPosts(); // 🔥 SE AGREGA A LA PÁGINA
 };
 
-// CARGAR POSTS
+// 🔹 CARGAR POSTS
 async function cargarPosts(){
 postsDiv.innerHTML="";
-const q = query(collection(db,"posts"),orderBy("fecha","desc"));
-const snap = await getDocs(q);
+const q=query(collection(db,"posts"),orderBy("fecha","desc"));
+const snap=await getDocs(q);
 snap.forEach(p=>{
- const d = p.data();
+ const d=p.data();
  postsDiv.innerHTML+=`
  <div class="post">
   <b>${d.nombre}</b><br>
@@ -160,7 +164,18 @@ snap.forEach(p=>{
 });
 }
 
-// LOGOUT
+// 🔹 USUARIOS
+async function cargarUsuarios(){
+const snap=await getDocs(collection(db,"users"));
+usuariosDiv.innerHTML="";
+snap.forEach(u=>{
+ if(u.id!==auth.currentUser.uid){
+  usuariosDiv.innerHTML+=`<div class="user"><b>${u.data().nombre}</b><br>${u.data().bio||""}</div>`;
+ }
+});
+}
+
+// 🔹 LOGOUT
 logout.onclick=async()=>{
 await signOut(auth);
 location.href="index.html";
