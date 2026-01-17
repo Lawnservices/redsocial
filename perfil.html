@@ -4,7 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi Red Social</title>
-<link rel="stylesheet" href="style.css">
+
+<style>
+body{margin:0;font-family:Arial;background:#f0f2f5}
+header{background:#1877f2;color:#fff;padding:15px;text-align:center;font-size:22px}
+.container{max-width:1000px;margin:auto;display:grid;grid-template-columns:300px 1fr;gap:20px;padding:15px}
+.card{background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.profile img{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #1877f2}
+input,textarea,button{width:100%;margin-top:8px;padding:8px;border-radius:6px;border:1px solid #ccc}
+button{background:#1877f2;color:#fff;border:none;cursor:pointer}
+button:hover{background:#145dbf}
+.post{border-bottom:1px solid #ddd;padding:10px 0}
+.post img{max-width:100%;border-radius:10px;margin-top:8px}
+.user{padding:8px 0;border-bottom:1px solid #ddd}
+.preview{max-width:100%;border-radius:10px;margin-top:8px}
+@media(max-width:768px){.container{grid-template-columns:1fr}}
+</style>
 </head>
 
 <body>
@@ -13,38 +28,160 @@
 
 <div class="container">
 
-  <!-- PERFIL -->
-  <div class="profile-card">
-    <img id="foto-perfil" src="https://via.placeholder.com/150">
-    <input type="file" id="foto-input">
+<!-- PERFIL -->
+<div class="card profile">
+  <img id="fotoPerfil" src="https://via.placeholder.com/150">
+  <input type="file" id="fotoInput">
 
-    <h3 id="perfil-nombre"></h3>
-    <p id="perfil-telefono"></p>
+  <h3 id="nombre"></h3>
+  <p id="telefono"></p>
 
-    <textarea id="bio" placeholder="Escribe tu bio..."></textarea>
-    <button id="guardar">Guardar perfil</button>
-    <button id="cerrar-sesion">Cerrar sesión</button>
-  </div>
+  <textarea id="bio" placeholder="Escribe tu bio..."></textarea>
+  <button id="guardarPerfil">Guardar perfil</button>
+  <button id="logout">Cerrar sesión</button>
+</div>
 
-  <!-- FEED -->
-  <div class="feed">
-    <div class="post-box">
-      <textarea id="texto-post" placeholder="¿Qué estás pensando?"></textarea>
-      <input type="file" id="foto-post">
-      <button id="publicar">Publicar</button>
-    </div>
+<!-- FEED -->
+<div class="card">
+  <h3>Crear publicación</h3>
+  <textarea id="textoPost" placeholder="¿Qué estás pensando?"></textarea>
+  <input type="file" id="imagenPost">
+  <img id="preview" class="preview" style="display:none">
+  <button id="publicar">Publicar</button>
 
-    <h3>Publicaciones</h3>
-    <div id="posts"></div>
+  <h3>Publicaciones</h3>
+  <div id="posts"></div>
 
-    <h3>Otros usuarios</h3>
-    <div id="lista-usuarios"></div>
-  </div>
+  <h3>Otros usuarios</h3>
+  <div id="usuarios"></div>
+</div>
 
 </div>
 
-<script type="module" src="perfil.js"></script>
+<script type="module">
+import { auth, db, storage } from './app.js';
+import {
+  doc, getDoc, updateDoc,
+  collection, addDoc, getDocs, query, orderBy
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+
+const fotoPerfil = document.getElementById("fotoPerfil");
+const fotoInput = document.getElementById("fotoInput");
+const bio = document.getElementById("bio");
+const guardarPerfil = document.getElementById("guardarPerfil");
+const logout = document.getElementById("logout");
+
+const textoPost = document.getElementById("textoPost");
+const imagenPost = document.getElementById("imagenPost");
+const publicar = document.getElementById("publicar");
+const preview = document.getElementById("preview");
+
+const postsDiv = document.getElementById("posts");
+const usuariosDiv = document.getElementById("usuarios");
+
+// 🔹 PREVIEW REAL DE IMAGEN
+imagenPost.onchange = () => {
+  const file = imagenPost.files[0];
+  if (!file) return;
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = "block";
+};
+
+// 🔹 AUTH
+auth.onAuthStateChanged(async user=>{
+if(!user){location.href="index.html";return;}
+
+const snap = await getDoc(doc(db,"users",user.uid));
+if(snap.exists()){
+ const d = snap.data();
+ nombre.innerText=d.nombre;
+ telefono.innerText=d.telefono;
+ bio.value=d.bio||"";
+ if(d.foto) fotoPerfil.src=d.foto;
+}
+
+cargarUsuarios();
+cargarPosts();
+});
+
+// 🔹 FOTO PERFIL
+fotoInput.onchange = async e=>{
+const file=e.target.files[0];
+if(!file)return;
+const r=ref(storage,`perfiles/${auth.currentUser.uid}`);
+await uploadBytes(r,file);
+const url=await getDownloadURL(r);
+await updateDoc(doc(db,"users",auth.currentUser.uid),{foto:url});
+fotoPerfil.src=url;
+};
+
+// 🔹 GUARDAR PERFIL
+guardarPerfil.onclick=async()=>{
+await updateDoc(doc(db,"users",auth.currentUser.uid),{bio:bio.value});
+alert("Perfil guardado");
+};
+
+// 🔹 PUBLICAR POST (ARREGLADO)
+publicar.onclick = async () => {
+  let imgURL = "";
+
+  if (imagenPost.files[0]) {
+    const r = ref(storage, `posts/${Date.now()}_${auth.currentUser.uid}`);
+    await uploadBytes(r, imagenPost.files[0]);
+    imgURL = await getDownloadURL(r);
+  }
+
+  await addDoc(collection(db, "posts"), {
+    uid: auth.currentUser.uid,
+    nombre: nombre.innerText,
+    texto: textoPost.value,
+    imagen: imgURL,
+    fecha: Date.now()
+  });
+
+  textoPost.value = "";
+  imagenPost.value = "";
+  preview.style.display = "none";
+
+  cargarPosts(); // 🔥 SE AGREGA A LA PÁGINA
+};
+
+// 🔹 CARGAR POSTS
+async function cargarPosts(){
+postsDiv.innerHTML="";
+const q=query(collection(db,"posts"),orderBy("fecha","desc"));
+const snap=await getDocs(q);
+snap.forEach(p=>{
+ const d=p.data();
+ postsDiv.innerHTML+=`
+ <div class="post">
+  <b>${d.nombre}</b><br>
+  ${d.texto||""}
+  ${d.imagen?`<img src="${d.imagen}">`:""}
+ </div>`;
+});
+}
+
+// 🔹 USUARIOS
+async function cargarUsuarios(){
+const snap=await getDocs(collection(db,"users"));
+usuariosDiv.innerHTML="";
+snap.forEach(u=>{
+ if(u.id!==auth.currentUser.uid){
+  usuariosDiv.innerHTML+=`<div class="user"><b>${u.data().nombre}</b><br>${u.data().bio||""}</div>`;
+ }
+});
+}
+
+// 🔹 LOGOUT
+logout.onclick=async()=>{
+await signOut(auth);
+location.href="index.html";
+};
+</script>
 <script type="module" src="app.js"></script>
- 
+<script type="module" src="perfil.js"></script>
 </body>
 </html>
