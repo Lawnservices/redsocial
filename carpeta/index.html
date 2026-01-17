@@ -1,61 +1,6 @@
 <!-- <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-</head>
-<body>
-    <input id="nombre" placeholder="Nombre">
-<input id="telefono" placeholder="+1 301xxxxxxx">
-<button id="enviar">Enviar código</button>
-
-<input id="codigo" placeholder="Código SMS">
-<button id="verificar">Entrar</button>
-
-<div id="recaptcha"></div>
-
-<script type="module" src="app.js"></script>
-<script type="module">
-import { auth, db } from './app.js';
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { setDoc, doc } from "firebase/firestore";
-
-window.recaptchaVerifier = new RecaptchaVerifier(
-  'recaptcha',
-  { size: 'invisible' },
-  auth
-);
-
-let nombreTemp = "";
-
-enviar.onclick = async () => {
-  nombreTemp = nombre.value;
-  const result = await signInWithPhoneNumber(auth, telefono.value, window.recaptchaVerifier);
-  window.confirmationResult = result;
-};
-
-verificar.onclick = async () => {
-  const res = await confirmationResult.confirm(codigo.value);
-  await setDoc(doc(db, "users", res.user.uid), {
-    nombre: nombreTemp,
-    telefono: res.user.phoneNumber,
-    bio: "",
-    foto: ""
-  }, { merge: true });
-
-   location.href = "feed.html";
-};
-</script>
-
-    <script type="module" src="app.js"></script>
-    <script type="module" src="login.js"></script>
-</body>
-</html> -->
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Red Social</title>
@@ -199,4 +144,4 @@ verificar.onclick = async () => {
     };
   </script>
 </body>
-</html>
+</html> -->
