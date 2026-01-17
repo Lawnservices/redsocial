@@ -81,6 +81,10 @@ const preview = document.getElementById("preview");
 const postsDiv = document.getElementById("posts");
 const usuariosDiv = document.getElementById("usuarios");
 
+// 🔹 VARIABLES FALTANTES (CORREGIDO)
+const nombre = document.getElementById("nombre");
+const telefono = document.getElementById("telefono");
+
 // 🔹 PREVIEW REAL DE IMAGEN
 imagenPost.onchange = () => {
   const file = imagenPost.files[0];
@@ -96,10 +100,10 @@ if(!user){location.href="index.html";return;}
 const snap = await getDoc(doc(db,"users",user.uid));
 if(snap.exists()){
  const d = snap.data();
- nombre.innerText=d.nombre;
- telefono.innerText=d.telefono;
- bio.value=d.bio||"";
- if(d.foto) fotoPerfil.src=d.foto;
+ nombre.innerText = d.nombre;
+ telefono.innerText = d.telefono;
+ bio.value = d.bio || "";
+ if(d.foto) fotoPerfil.src = d.foto;
 }
 
 cargarUsuarios();
@@ -123,7 +127,7 @@ await updateDoc(doc(db,"users",auth.currentUser.uid),{bio:bio.value});
 alert("Perfil guardado");
 };
 
-// 🔹 PUBLICAR POST (ARREGLADO)
+// 🔹 PUBLICAR POST
 publicar.onclick = async () => {
   let imgURL = "";
 
@@ -145,7 +149,7 @@ publicar.onclick = async () => {
   imagenPost.value = "";
   preview.style.display = "none";
 
-  cargarPosts(); // 🔥 SE AGREGA A LA PÁGINA
+  cargarPosts();
 };
 
 // 🔹 CARGAR POSTS
@@ -181,7 +185,6 @@ await signOut(auth);
 location.href="index.html";
 };
 </script>
-<script type="module" src="app.js"></script>
-<script type="module" src="perfil.js"></script>
+
 </body>
 </html>

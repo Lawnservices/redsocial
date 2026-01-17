@@ -1,72 +1,12 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-</head>
-<body>
-    <input id="nombre" placeholder="Nombre">
-<input id="telefono" placeholder="+1 301xxxxxxx">
-<button id="enviar">Enviar código</button>
-
-<input id="codigo" placeholder="Código SMS">
-<button id="verificar">Entrar</button>
-
-<div id="recaptcha"></div>
-
-<script type="module" src="app.js"></script>
-<script type="module">
-import { auth, db } from './app.js';
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { setDoc, doc } from "firebase/firestore";
-
-window.recaptchaVerifier = new RecaptchaVerifier(
-  'recaptcha',
-  { size: 'invisible' },
-  auth
-);
-
-let nombreTemp = "";
-
-enviar.onclick = async () => {
-  nombreTemp = nombre.value;
-  const result = await signInWithPhoneNumber(auth, telefono.value, window.recaptchaVerifier);
-  window.confirmationResult = result;
-};
-
-verificar.onclick = async () => {
-  const res = await confirmationResult.confirm(codigo.value);
-  await setDoc(doc(db, "users", res.user.uid), {
-    nombre: nombreTemp,
-    telefono: res.user.phoneNumber,
-    bio: "",
-    foto: ""
-  }, { merge: true });
-
-   location.href = "feed.html";
-};
-</script>
-
-    <script type="module" src="app.js"></script>
-    <script type="module" src="login.js"></script>
-</body>
-</html> -->
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Red Social</title>
+
   <style>
-    /* ===== Estilos generales ===== */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
 
     body {
       background: #f0f2f5;
@@ -86,10 +26,7 @@ verificar.onclick = async () => {
       text-align: center;
     }
 
-    h1 {
-      color: #1877f2;
-      margin-bottom: 30px;
-    }
+    h1 { color: #1877f2; margin-bottom: 30px; }
 
     input {
       width: 100%;
@@ -113,13 +50,9 @@ verificar.onclick = async () => {
       transition: background 0.3s;
     }
 
-    button:hover {
-      background: #145dbf;
-    }
+    button:hover { background: #145dbf; }
 
-    #recaptcha {
-      margin-top: 12px;
-    }
+    #recaptcha { margin-top: 12px; }
 
     .small-text {
       font-size: 14px;
@@ -128,7 +61,9 @@ verificar.onclick = async () => {
     }
   </style>
 </head>
+
 <body>
+
   <div class="login-container">
     <h1>Mi Red Social</h1>
 
@@ -144,16 +79,20 @@ verificar.onclick = async () => {
     <p class="small-text">Solo números de prueba: +12408838479 / Código: 123456</p>
   </div>
 
+  <!-- Firebase config -->
   <script type="module" src="app.js"></script>
+
+  <!-- Lógica del login -->
   <script type="module">
     import { auth, db } from './app.js';
-    import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-    import { setDoc, doc } from "firebase/firestore";
+    import { RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { setDoc, doc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
+    // 🔹 reCAPTCHA CORRECTO
     window.recaptchaVerifier = new RecaptchaVerifier(
+      auth,
       'recaptcha',
-      { size: 'invisible' },
-      auth
+      { size: 'invisible' }
     );
 
     let nombreTemp = "";
@@ -164,13 +103,15 @@ verificar.onclick = async () => {
     const telefono = document.getElementById('telefono');
     const codigo = document.getElementById('codigo');
 
+    // 🔹 ENVIAR CÓDIGO
     enviar.onclick = async () => {
-      if(!nombre.value || !telefono.value){
+      if (!nombre.value || !telefono.value) {
         alert("Ingresa nombre y teléfono");
         return;
       }
 
       nombreTemp = nombre.value;
+
       try {
         const result = await signInWithPhoneNumber(auth, telefono.value, window.recaptchaVerifier);
         window.confirmationResult = result;
@@ -181,9 +122,11 @@ verificar.onclick = async () => {
       }
     };
 
+    // 🔹 VERIFICAR CÓDIGO
     verificar.onclick = async () => {
       try {
         const res = await window.confirmationResult.confirm(codigo.value);
+
         await setDoc(doc(db, "users", res.user.uid), {
           nombre: nombreTemp,
           telefono: res.user.phoneNumber,
@@ -191,14 +134,13 @@ verificar.onclick = async () => {
           foto: ""
         }, { merge: true });
 
-        window.location.href = "feed.html";
+        window.location.href = "perfil.html";
       } catch (e) {
         console.error(e);
         alert("Código incorrecto o error. Intenta de nuevo.");
       }
     };
   </script>
-  <script type="module" src="app.js"></script>
-  <script type="module" src="login.js"></script>
+
 </body>
 </html>
