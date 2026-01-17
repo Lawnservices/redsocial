@@ -58,9 +58,13 @@ button:hover{background:#145dbf}
 
 </div>
 
-<script type="module">
-document.addEventListener("DOMContentLoaded", () => {
+<!-- ========================= -->
+<!--  SCRIPT COMPLETO CORREGIDO -->
+<!-- ========================= -->
 
+<script type="module">
+
+/* IMPORTS — SIEMPRE VAN ARRIBA */
 import { auth, db, storage } from './app.js';
 import {
   doc, getDoc, updateDoc,
@@ -69,6 +73,10 @@ import {
 import { signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
+/* TODO EL CÓDIGO VA DENTRO DEL DOMContentLoaded */
+document.addEventListener("DOMContentLoaded", () => {
+
+/* ELEMENTOS */
 const fotoPerfil = document.getElementById("fotoPerfil");
 const fotoInput = document.getElementById("fotoInput");
 const bio = document.getElementById("bio");
@@ -86,7 +94,7 @@ const usuariosDiv = document.getElementById("usuarios");
 const nombre = document.getElementById("nombre");
 const telefono = document.getElementById("telefono");
 
-// PREVIEW DE IMAGEN
+/* PREVIEW DE IMAGEN */
 imagenPost.onchange = () => {
   const file = imagenPost.files[0];
   if (!file) return;
@@ -94,7 +102,7 @@ imagenPost.onchange = () => {
   preview.style.display = "block";
 };
 
-// AUTH
+/* AUTH */
 auth.onAuthStateChanged(async user=>{
 if(!user){location.href="index.html";return;}
 
@@ -111,7 +119,7 @@ cargarUsuarios();
 cargarPosts();
 });
 
-// FOTO PERFIL
+/* FOTO PERFIL */
 fotoInput.onchange = async e=>{
 const file=e.target.files[0];
 if(!file)return;
@@ -122,13 +130,13 @@ await updateDoc(doc(db,"users",auth.currentUser.uid),{foto:url});
 fotoPerfil.src=url;
 };
 
-// GUARDAR PERFIL
+/* GUARDAR PERFIL */
 guardarPerfil.onclick=async()=>{
 await updateDoc(doc(db,"users",auth.currentUser.uid),{bio:bio.value});
 alert("Perfil guardado");
 };
 
-// PUBLICAR POST
+/* PUBLICAR POST */
 publicar.onclick = async () => {
   let imgURL = "";
 
@@ -153,7 +161,7 @@ publicar.onclick = async () => {
   cargarPosts();
 };
 
-// CARGAR POSTS
+/* CARGAR POSTS */
 async function cargarPosts(){
 postsDiv.innerHTML="";
 const q=query(collection(db,"posts"),orderBy("fecha","desc"));
@@ -169,7 +177,7 @@ snap.forEach(p=>{
 });
 }
 
-// USUARIOS
+/* CARGAR USUARIOS */
 async function cargarUsuarios(){
 const snap=await getDocs(collection(db,"users"));
 usuariosDiv.innerHTML="";
@@ -180,13 +188,14 @@ snap.forEach(u=>{
 });
 }
 
-// LOGOUT
+/* LOGOUT */
 logout.onclick=async()=>{
 await signOut(auth);
 location.href="index.html";
 };
 
 }); // FIN DEL DOMContentLoaded
+
 </script>
 
 </body>
