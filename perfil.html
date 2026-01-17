@@ -1,106 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Perfil</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Red Social</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-    }
-
-    body {
-      margin: 0;
-      background: #f0f2f5;
-    }
-
-    header {
-      background: #1877f2;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      font-size: 22px;
-      font-weight: bold;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 20px auto;
-      display: grid;
-      grid-template-columns: 300px 1fr;
-      gap: 20px;
-      padding: 10px;
-    }
-
-    .profile-card {
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-
-    .profile-card img {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid #1877f2;
-      margin-bottom: 10px;
-    }
-
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-
-    textarea {
-      resize: none;
-    }
-
-    button {
-      margin-top: 10px;
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      background: #1877f2;
-      color: white;
-      cursor: pointer;
-      font-size: 15px;
-    }
-
-    button:hover {
-      background: #145dbf;
-    }
-
-    .feed {
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-
-    .users {
-      margin-top: 20px;
-    }
-
-    .user {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-    }
-
-    @media(max-width: 768px) {
-      .container {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+<style>
+body{margin:0;font-family:Arial;background:#f0f2f5}
+header{background:#1877f2;color:#fff;padding:15px;text-align:center;font-size:22px}
+.container{max-width:1000px;margin:auto;display:grid;grid-template-columns:300px 1fr;gap:20px;padding:15px}
+.card{background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.profile img{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #1877f2}
+input,textarea,button{width:100%;margin-top:8px;padding:8px;border-radius:6px;border:1px solid #ccc}
+button{background:#1877f2;color:#fff;border:none;cursor:pointer}
+button:hover{background:#145dbf}
+.post{border-bottom:1px solid #ddd;padding:10px 0}
+.post img{max-width:100%;border-radius:10px;margin-top:8px}
+.user{padding:8px 0;border-bottom:1px solid #ddd}
+@media(max-width:768px){.container{grid-template-columns:1fr}}
+</style>
 </head>
 
 <body>
@@ -109,105 +27,143 @@
 
 <div class="container">
 
-  <!-- PERFIL -->
-  <div class="profile-card">
-    <img id="foto-perfil" src="https://via.placeholder.com/150">
-    <input type="file" id="foto-input">
+<!-- PERFIL -->
+<div class="card profile">
+  <img id="fotoPerfil" src="https://via.placeholder.com/150">
+  <input type="file" id="fotoInput">
 
-    <h3 id="perfil-nombre"></h3>
-    <p id="perfil-telefono"></p>
+  <h3 id="nombre"></h3>
+  <p id="telefono"></p>
 
-    <textarea id="bio" placeholder="Escribe tu bio..."></textarea>
-    <button id="guardar">Guardar perfil</button>
+  <textarea id="bio" placeholder="Escribe tu bio..."></textarea>
+  <button id="guardarPerfil">Guardar perfil</button>
+  <button id="logout">Cerrar sesión</button>
+</div>
 
-    <button id="cerrar-sesion">Cerrar sesión</button>
-  </div>
+<!-- FEED -->
+<div class="card">
+  <h3>Crear publicación</h3>
+  <textarea id="textoPost" placeholder="¿Qué estás pensando?"></textarea>
+  <input type="file" id="imagenPost">
+  <button id="publicar">Publicar</button>
 
-  <!-- FEED -->
-  <div class="feed">
-    <h3>Otros usuarios</h3>
-    <div class="users" id="lista-usuarios"></div>
-  </div>
+  <h3>Publicaciones</h3>
+  <div id="posts"></div>
+
+  <h3>Otros usuarios</h3>
+  <div id="usuarios"></div>
+</div>
 
 </div>
 
 <script type="module">
 import { auth, db, storage } from './app.js';
-import { doc, updateDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import {
+  doc, getDoc, setDoc, updateDoc,
+  collection, addDoc, getDocs, query, orderBy
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
-const fotoInput = document.getElementById("foto-input");
-const fotoPerfil = document.getElementById("foto-perfil");
+const fotoPerfil = document.getElementById("fotoPerfil");
+const fotoInput = document.getElementById("fotoInput");
 const bio = document.getElementById("bio");
-const guardar = document.getElementById("guardar");
-const cerrarSesion = document.getElementById("cerrar-sesion");
-const listaUsuarios = document.getElementById("lista-usuarios");
+const guardarPerfil = document.getElementById("guardarPerfil");
+const logout = document.getElementById("logout");
 
-auth.onAuthStateChanged(async user => {
-  if (!user) {
-    location.href = "index.html";
-    return;
-  }
+const textoPost = document.getElementById("textoPost");
+const imagenPost = document.getElementById("imagenPost");
+const publicar = document.getElementById("publicar");
 
-  const docRef = doc(db, "users", user.uid);
-  const snap = await getDoc(docRef);
+const postsDiv = document.getElementById("posts");
+const usuariosDiv = document.getElementById("usuarios");
 
-  if (snap.exists()) {
-    const data = snap.data();
-    document.getElementById("perfil-nombre").innerText = data.nombre;
-    document.getElementById("perfil-telefono").innerText = data.telefono;
-    bio.value = data.bio || "";
-    if (data.foto) fotoPerfil.src = data.foto;
-  }
+auth.onAuthStateChanged(async user=>{
+if(!user){location.href="index.html";return;}
 
-  const usersSnap = await getDocs(collection(db, "users"));
-  listaUsuarios.innerHTML = "";
-  usersSnap.forEach(d => {
-    if (d.id !== user.uid) {
-      const u = d.data();
-      listaUsuarios.innerHTML += `
-        <div class="user">
-          <strong>${u.nombre}</strong><br>
-          <small>${u.bio || ""}</small>
-        </div>
-      `;
-    }
-  });
+const userRef = doc(db,"users",user.uid);
+const snap = await getDoc(userRef);
+
+if(snap.exists()){
+  const d = snap.data();
+  nombre.innerText = d.nombre;
+  telefono.innerText = d.telefono;
+  bio.value = d.bio || "";
+  if(d.foto) fotoPerfil.src = d.foto;
+}
+
+// OTROS USUARIOS
+const usersSnap = await getDocs(collection(db,"users"));
+usuariosDiv.innerHTML="";
+usersSnap.forEach(u=>{
+ if(u.id!==user.uid){
+  usuariosDiv.innerHTML+=`<div class="user"><b>${u.data().nombre}</b><br>${u.data().bio||""}</div>`;
+ }
 });
 
-// ✅ SUBIR FOTO Y GUARDAR URL
-fotoInput.onchange = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+// POSTS
+cargarPosts();
+});
 
-  const ext = file.name.split('.').pop();
-  const storageRef = ref(storage, `perfil/${auth.currentUser.uid}.${ext}`);
-
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
-
-  fotoPerfil.src = url;
-
-  await updateDoc(doc(db, "users", auth.currentUser.uid), {
-    foto: url
-  });
-
-  alert("Foto guardada correctamente");
+// FOTO PERFIL
+fotoInput.onchange = async e=>{
+const file = e.target.files[0];
+if(!file) return;
+const refImg = ref(storage,`perfiles/${auth.currentUser.uid}`);
+await uploadBytes(refImg,file);
+const url = await getDownloadURL(refImg);
+await updateDoc(doc(db,"users",auth.currentUser.uid),{foto:url});
+fotoPerfil.src = url;
 };
 
-// ✅ GUARDAR BIO
-guardar.onclick = async () => {
-  await updateDoc(doc(db, "users", auth.currentUser.uid), {
-    bio: bio.value
-  });
-  alert("Perfil actualizado");
+// GUARDAR PERFIL
+guardarPerfil.onclick = async ()=>{
+await updateDoc(doc(db,"users",auth.currentUser.uid),{bio:bio.value});
+alert("Perfil guardado");
 };
 
-// ✅ CERRAR SESIÓN
-cerrarSesion.onclick = async () => {
-  await signOut(auth);
-  location.href = "index.html";
+// PUBLICAR
+publicar.onclick = async ()=>{
+let imgUrl="";
+if(imagenPost.files[0]){
+ const r = ref(storage,`posts/${Date.now()}_${auth.currentUser.uid}`);
+ await uploadBytes(r,imagenPost.files[0]);
+ imgUrl = await getDownloadURL(r);
+}
+
+await addDoc(collection(db,"posts"),{
+ uid:auth.currentUser.uid,
+ nombre:nombre.innerText,
+ texto:textoPost.value,
+ imagen:imgUrl,
+ fecha:Date.now()
+});
+
+textoPost.value="";
+imagenPost.value="";
+cargarPosts();
+};
+
+// CARGAR POSTS
+async function cargarPosts(){
+postsDiv.innerHTML="";
+const q = query(collection(db,"posts"),orderBy("fecha","desc"));
+const snap = await getDocs(q);
+snap.forEach(p=>{
+ const d = p.data();
+ postsDiv.innerHTML+=`
+ <div class="post">
+  <b>${d.nombre}</b><br>
+  ${d.texto||""}
+  ${d.imagen?`<img src="${d.imagen}">`:""}
+ </div>`;
+});
+}
+
+// LOGOUT
+logout.onclick=async()=>{
+await signOut(auth);
+location.href="index.html";
 };
 </script>
 <script type="module" src="app.js"></script>
